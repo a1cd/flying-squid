@@ -131,7 +131,7 @@ module.exports.player = function (player, serv, { version }) {
 
     if (!heldItemBlock) return
 
-    const entityInWay = Object.values(serv.entities).every((val, i, array) => {
+    const entityInWay = Object.values(serv.entities).every((val, i, array) => { // test if there is a player's hitbox in the way of the placed block
       const playerBox = new Vec3(0.6, 0.6, 1.8)
       if (val.crouching) playerBox.z = 1.5
       /**
