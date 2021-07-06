@@ -121,10 +121,36 @@ squid.supportedVersions.forEach((supportedVersion, i) => {
         expect(newBlock.type).toEqual(0)
       })
 
-      test('can place a block', async () => {
+      test('cannot place a block in hitbox', async () => {
         await Promise.all([waitSpawnZone(bot, 2), waitSpawnZone(bot2, 2), onGround(bot), onGround(bot2)])
 
         const pos = bot.entity.position.offset(0, -2, 0).floored()
+        const digPromise = once(bot2, 'blockUpdate', { array: true })
+        bot.dig(bot.blockAt(pos))
+
+        let [, newBlock] = await digPromise
+        assertPosEqual(newBlock.position, pos)
+        expect(newBlock.type).toEqual(0)
+
+        const invPromise = new Promise((resolve) => {
+          bot.inventory.on('updateSlot', (slot, oldItem, newItem) => {
+            if (slot === 36 && newItem && newItem.type === 1) { resolve() }
+          })
+        })
+        bot.creative.setInventorySlot(36, new Item(1, 1))
+        await invPromise
+
+        const placePromise = once(bot2, 'blockUpdate', { array: true })
+        bot.placeBlock(bot.blockAt(pos.offset(0, -1, 0)), new Vec3(0, 1, 0));
+        [, newBlock] = await placePromise
+        assertPosEqual(newBlock.position, pos)
+        expect(newBlock.type === 1).toEqual(false)
+      })
+
+      test('can place a block outside hitbox', async () => {
+        await Promise.all([waitSpawnZone(bot, 2), waitSpawnZone(bot2, 2), onGround(bot), onGround(bot2)])
+
+        const pos = bot.entity.position.offset(1, -2, 0).floored()
         const digPromise = once(bot2, 'blockUpdate', { array: true })
         bot.dig(bot.blockAt(pos))
 
