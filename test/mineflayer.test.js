@@ -68,7 +68,6 @@ squid.supportedVersions.forEach((supportedVersion, i) => {
       } else {
         entityName = 'ender_dragon'
       }
-
       await once(serv, 'listening')
       const port = serv._server.socketServer.address().port
       bot = mineflayer.createBot({
@@ -167,7 +166,7 @@ squid.supportedVersions.forEach((supportedVersion, i) => {
         await invPromise
 
         const placePromise = once(bot2, 'blockUpdate', { array: true })
-        bot.placeBlock(bot.blockAt(pos.offset(0, -1, 0)), new Vec3(0, 1, 0));
+        bot.placeBlock(bot.blockAt(pos.offset(1, -1, 0)), new Vec3(0, 1, 0));
         [, newBlock] = await placePromise
         assertPosEqual(newBlock.position, pos)
         expect(newBlock.type).toEqual(1)
