@@ -127,13 +127,13 @@ module.exports.player = function (player, serv, { version }) {
     if (direction === 0) half = 'top'
     else if (direction === 1) half = 'bottom'
 
-    if (!blocks[heldItemId]) return
-
     const heldItemBlock = blocks[heldItemId]
 
-    let entityInWay = Object.values(serv.entities).every((val, i, array) => {
-      var playerBox = new Vec3(0.6, 0.6, 1.8)
-      if (val.crouching) {playerBox.z = 1.5}
+    if (!heldItemBlock) return
+
+    const entityInWay = Object.values(serv.entities).every((val, i, array) => {
+      const playerBox = new Vec3(0.6, 0.6, 1.8)
+      if (val.crouching) playerBox.z = 1.5
       /**
        * @type {Vec3}
        */
@@ -141,7 +141,8 @@ module.exports.player = function (player, serv, { version }) {
       const normDist = playerPos.minus(placedPosition)
       const maxNomrDistXY = Math.abs([normDist.x, normDist.y].sort((a, b) => a - b)[0])
       const maxPlayerBoxXY = Math.abs([playerBox.x, playerBox.y].sort((a, b) => a - b)[0])
-      if ((maxPlayerBoxXY/2 >= maxNomrDistXY) && (playerBox.z <= normDist.z && 0 >= normDist.z)) {
+      const zero = 0
+      if ((maxPlayerBoxXY / 2 >= maxNomrDistXY) && ((playerBox.z <= normDist.z) && (zero >= normDist.z))) {
         return false
       }
       return true
