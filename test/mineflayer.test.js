@@ -18,7 +18,7 @@ squid.supportedVersions.forEach((supportedVersion, i) => {
     return
   }
 
-  const mcData = require('minecraft-data')('1.16.1')// (supportedVersion)
+  const mcData = require('minecraft-data')(supportedVersion)
   const version = mcData.version
 
   const Item = require('prismarine-item')(supportedVersion)
@@ -56,7 +56,7 @@ squid.supportedVersions.forEach((supportedVersion, i) => {
       options.logging = false
       options.version = version.minecraftVersion
       options.generation = { // TODO: fix block tests failing at random without manually specifying seed
-        name: 'diamond_square',
+        name: 'superflat',
         options: {
           seed: 2116746182
         }
