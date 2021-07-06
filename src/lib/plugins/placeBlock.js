@@ -119,12 +119,35 @@ module.exports.player = function (player, serv, { version }) {
     const dz = player.position.z - (placedPosition.z + 0.5)
     const angle = Math.atan2(dx, -dz) * 180 / Math.PI + 180 // Convert to [0,360[
 
+    const heldItemId = mcData.itemsByName[heldItem.name].id
+
     if (serv.supportFeature('blockPlaceHasIntCursor')) cursorY /= 16
 
     let half = cursorY > 0.5 ? 'top' : 'bottom'
     if (direction === 0) half = 'top'
     else if (direction === 1) half = 'bottom'
 
+    if (!blocks[heldItemId]) return
+
+    const heldItemBlock = blocks[heldItemId]
+
+    let entityInWay = Object.values(serv.entities).every((val, i, array) => {
+      var playerBox = new Vec3(0.6, 0.6, 1.8)
+      if (val.crouching) {playerBox.z = 1.5}
+      /**
+       * @type {Vec3}
+       */
+      const playerPos = val.position
+      const normDist = playerPos.minus(placedPosition)
+      const maxNomrDistXY = Math.abs([normDist.x, normDist.y].sort((a, b) => a - b)[0])
+      const maxPlayerBoxXY = Math.abs([playerBox.x, playerBox.y].sort((a, b) => a - b)[0])
+      if ((maxPlayerBoxXY/2 >= maxNomrDistXY) && (playerBox.z <= normDist.z && 0 >= normDist.z)) {
+        return false
+      }
+      return true
+    })
+    if (entityInWay) return
+    if (player.inventory.slots[36 + player.heldItemSlot] == null) return
     const { id, data } = await serv.placeItem({
       item: heldItem,
       angle,
@@ -142,13 +165,10 @@ module.exports.player = function (player, serv, { version }) {
       }
     })
 
-    if (!blocks[id]) return
-
     const sound = 'dig.' + (materialToSound[blocks[id].material] || 'stone')
     serv.playSound(sound, player.world, placedPosition.offset(0.5, 0.5, 0.5), {
       pitch: 0.8
     })
-
     if (player.gameMode === 0) {
       heldItem.count--
       if (heldItem.count === 0) {
