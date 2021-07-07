@@ -25,6 +25,9 @@ squid.supportedVersions.forEach((supportedVersion, i) => {
 
   describe('server with mineflayer connection ' + version.minecraftVersion, () => {
     jest.setTimeout(100 * 1000)
+    /**
+     * @type {mineflayer.Bot}
+     */
     let bot
     let bot2
     let serv

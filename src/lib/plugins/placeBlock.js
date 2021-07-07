@@ -130,7 +130,8 @@ module.exports.player = function (player, serv, { version }) {
     const heldItemBlock = blocks[heldItemId]
 
     if (!heldItemBlock) return
-
+    
+    const HasItems = (player.inventory.slots[36 + player.heldItemSlot]) == null
     const entityInWay = Object.values(serv.entities).every((val, i, array) => { // test if there is a player's hitbox in the way of the placed block
       const playerBox = new Vec3(0.6, 0.6, 1.8)
       if (val.crouching) playerBox.z = 1.5
@@ -147,38 +148,41 @@ module.exports.player = function (player, serv, { version }) {
       }
       return true
     })
-    if (entityInWay) return
-    if (player.inventory.slots[36 + player.heldItemSlot] == null) return
-    const { id, data } = await serv.placeItem({
-      item: heldItem,
-      angle,
-      direction,
-      player,
-      referencePosition,
-      placedPosition,
-      directionVector,
-      properties: {
-        rotation: Math.floor(angle / 22.5 + 0.5) & 0xF,
-        axis: directionToAxis[direction],
-        facing: directionToFacing[Math.floor(angle / 90 + 0.5) & 0x3],
-        half,
-        waterlogged: (await player.world.getBlock(placedPosition)).type === mcData.blocksByName.water.id
+    if (entityInWay || HasItems) {
+      console.log("block place denied because entity in way")
+      return
+    } else {
+      const { id, data } = await serv.placeItem({
+        item: heldItem,
+        angle,
+        direction,
+        player,
+        referencePosition,
+        placedPosition,
+        directionVector,
+        properties: {
+          rotation: Math.floor(angle / 22.5 + 0.5) & 0xF,
+          axis: directionToAxis[direction],
+          facing: directionToFacing[Math.floor(angle / 90 + 0.5) & 0x3],
+          half,
+          waterlogged: (await player.world.getBlock(placedPosition)).type === mcData.blocksByName.water.id
+        }
+      })
+  
+      const sound = 'dig.' + (materialToSound[blocks[id].material] || 'stone')
+      serv.playSound(sound, player.world, placedPosition.offset(0.5, 0.5, 0.5), {
+        pitch: 0.8
+      })
+      if (player.gameMode === 0) {
+        heldItem.count--
+        if (heldItem.count === 0) {
+          player.inventory.slots[36 + player.heldItemSlot] = null
+        }
       }
-    })
-
-    const sound = 'dig.' + (materialToSound[blocks[id].material] || 'stone')
-    serv.playSound(sound, player.world, placedPosition.offset(0.5, 0.5, 0.5), {
-      pitch: 0.8
-    })
-    if (player.gameMode === 0) {
-      heldItem.count--
-      if (heldItem.count === 0) {
-        player.inventory.slots[36 + player.heldItemSlot] = null
-      }
+  
+      const stateId = serv.supportFeature('theFlattening') ? (blocks[id].minStateId + data) : (id << 4 | data)
+      player.setBlock(placedPosition, stateId)
     }
-
-    const stateId = serv.supportFeature('theFlattening') ? (blocks[id].minStateId + data) : (id << 4 | data)
-    player.setBlock(placedPosition, stateId)
   })
 }
 
